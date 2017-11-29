@@ -88,13 +88,6 @@ print(letterToTensor('J'))
 print(lineToTensor('Jones').size())
 # ----------------------------------------------------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------------------------------------------------------
-# build RNN
-# ----------------------------------------------------------------------------------------------------------------------
-n_hidden = 128
-rnn = RNNPytorch(n_letters, n_hidden, n_categories)
-# ----------------------------------------------------------------------------------------------------------------------
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # helper functions
@@ -119,25 +112,52 @@ def randomTrainingExample():
 # ----------------------------------------------------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------------------------------------------------
+# build RNN
+# ----------------------------------------------------------------------------------------------------------------------
+import torch.nn as nn
+n_hidden = 128
+lstm = nn.LSTM(57, n_categories)
+print ("lstm: ", lstm)
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # train functions
 # ----------------------------------------------------------------------------------------------------------------------
 learning_rate = 0.005 # If you set this too high, it might explode. If too low, it might not learn
 import torch.nn as nn
 criterion = nn.NLLLoss()
 
-def train(category_tensor, line_tensor):
-    hidden = rnn.initHidden()
+softmax = nn.LogSoftmax()
 
-    rnn.zero_grad()
+def train(category_tensor, line_tensor):
+
+    #
+
+
+    #hidden = Variable(torch.zeros(1, n_hidden))
+
+    lstm.zero_grad()
 
     for i in range(line_tensor.size()[0]):
-        output, hidden = rnn(line_tensor[i], hidden)
+
+        input = line_tensor[i].view(1,1,-1)
+        # print ("input: ", input)
+        if i == 0:
+            output, hidden = lstm(input)
+        else:
+            output, hidden = lstm(input, hidden)
+
+    output = output.view(1,-1)
+    output = softmax(output)
+        # print("output: ", output)
 
     loss = criterion(output, category_tensor)
     loss.backward()
 
     # Add parameters' gradients to their values, multiplied by learning rate
-    for p in rnn.parameters():
+    for p in lstm.parameters():
         p.data.add_(-learning_rate, p.grad.data)
 
     return output, loss.data[0]
@@ -150,7 +170,7 @@ def train(category_tensor, line_tensor):
 import time
 import math
 
-n_iters = 100000
+n_iters = 200000
 print_every = 5000
 plot_every = 1000
 
@@ -215,10 +235,23 @@ n_confusion = 10000
 
 # Just return an output given a line
 def evaluate(line_tensor):
-    hidden = rnn.initHidden()
+    #
+
+    #hidden = Variable(torch.zeros(1, n_hidden))
+
+    lstm.zero_grad()
 
     for i in range(line_tensor.size()[0]):
-        output, hidden = rnn(line_tensor[i], hidden)
+
+        input = line_tensor[i].view(1,1,-1)
+        # print ("input: ", input)
+        if i == 0:
+            output, hidden = lstm(input)
+        else:
+            output, hidden = lstm(input, hidden)
+    output = output.view(1,-1)
+    output = softmax(output)
+        # print("output: ", output)
 
     return output
 
@@ -251,6 +284,13 @@ ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
 # sphinx_gallery_thumbnail_number = 2
 plt.show()
 # ----------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
 
 
 

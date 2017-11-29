@@ -9,7 +9,7 @@ class LstmPytorch(nn.Module):
         super(LstmPytorch, self).__init__()
 
         self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(input_size + hidden_size, hidden_size)
+
         self.i2h = nn.Linear(input_size + hidden_size, hidden_size)
         self.i2o = nn.Linear(input_size + hidden_size, output_size)
         self.softmax = nn.LogSoftmax()
@@ -22,5 +22,4 @@ class LstmPytorch(nn.Module):
         return output, hidden
 
     def initHidden(self):
-        return Variable(torch.zeros(1, self.hidden_size)).cuda()
-
+        return Variable(torch.zeros(1, self.hidden_size))
