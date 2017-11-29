@@ -1,8 +1,8 @@
 import torch as pt
 
-class MLP_pytorch(pt.nn.Module):
+class MLPPytorch(pt.nn.Module):
     def __init__(self):
-        super(MLP_pytorch, self).__init__()
+        super(MLPPytorch, self).__init__()
         self.fc1 = pt.nn.Linear(784, 512)
         self.fc2 = pt.nn.Linear(512, 128)
         self.fc3 = pt.nn.Linear(128, 10)

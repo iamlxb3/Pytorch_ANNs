@@ -1,16 +1,13 @@
-'''This is a cuda version of pytorch NLP
-Otherwise add "if torch.cuda.is_available()" to check
-'''
 
 import io
 import os
 import pickle
 import sys
-
+from torch.autograd import Variable
 import numpy as np
 import torch as pt
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf8')
+#sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf8')
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 top_dir = os.path.dirname(current_dir)
@@ -18,9 +15,8 @@ data_dir = os.path.join(top_dir, 'data')
 sys.path.append(top_dir)
 
 
-from ANNs.MLP.mlp_pytorch import MLPPytorch
+from ANNs.CNN.cnn_pytorch import CNNPytorch
 from general_funcs.evaluate import accuracy_calculate
-
 
 # config
 BATCH_SIZE = 100
@@ -38,23 +34,32 @@ training_data = pt.utils.data.DataLoader(training_data, batch_size=BATCH_SIZE)
 test_data = pt.utils.data.DataLoader(test_data, batch_size=BATCH_SIZE)
 #
 
-# build mlp
-mlp1 = MLPPytorch()
+# build cnn
+img_size = (1,1,28,28) # set the image size manually
+cnn1 = CNNPytorch(img_size)
+print (cnn1)
 if pt.cuda.device_count() > 1:
   print("Let's use", pt.cuda.device_count(), "GPUs!")
   # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
-  model = pt.nn.DataParallel(mlp1)
+  model = pt.nn.DataParallel(cnn1)
 else:
     print ("cuda device number: ", pt.cuda.device_count())
 
 if pt.cuda.is_available():
-    mlp1.cuda()
+    cnn1.cuda()
 #
 
 # loss func and optim
-optimizer = pt.optim.SGD(mlp1.parameters(),lr=0.01,momentum=0.9)
+optimizer = pt.optim.SGD(cnn1.parameters(),lr=0.01,momentum=0.9)
 lossfunc = pt.nn.CrossEntropyLoss().cuda()
 #
+
+# # TEST CNN
+# input = Variable(pt.randn(1, 1, 28, 28)).cuda()
+# out = cnn1(input)
+# print(out)
+# sys.exit()
+# #
 
 # ----------------------------------------------------------------------------------------------------------------------
 # training
@@ -70,10 +75,8 @@ for epoch in range(MAX_TRAINING_EPOCH):
         inputs = pt.autograd.Variable(inputs).cuda()
         true_labels = pt.autograd.Variable(true_labels).cuda()
 
-        outputs = mlp1(inputs) # -> return pt.nn.functional.softmax(self.fc3(dout))
+        outputs = cnn1(inputs) # -> return pt.nn.functional.softmax(self.fc3(dout))
 
-        print ("inputs: ", inputs)
-        sys.exit()
         # # see grads
         # for parameter in mlp1.parameters():
         #     print ("grad: ", parameter.grad)
@@ -94,7 +97,6 @@ for epoch in range(MAX_TRAINING_EPOCH):
             print("epoch: {}, batch: {}, accuracy: {}".format(epoch, i, accuracy))
 # ----------------------------------------------------------------------------------------------------------------------
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # testing
 # ----------------------------------------------------------------------------------------------------------------------
@@ -103,7 +105,7 @@ for i, data in enumerate(test_data):
     (inputs, true_labels) = data
     inputs = pt.autograd.Variable(inputs).cuda()
     true_labels = pt.autograd.Variable(true_labels).cuda()
-    outputs = mlp1(inputs)
+    outputs = cnn1(inputs)
 
     outputs = outputs.cpu().data.numpy()
     true_labels = true_labels.cpu().data.numpy()
@@ -112,14 +114,4 @@ for i, data in enumerate(test_data):
     accuracy_list.append(accuracy)
 
 print ("avg_accuracy: ", sum(accuracy_list)/len(accuracy_list))
-# ----------------------------------------------------------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-# save model or parameters
-# ----------------------------------------------------------------------------------------------------------------------
-# # only save paramters
-# pt.save(model.state_dict(), "path1")
-# # save model
-# pt.save(model, "path1")
 # ----------------------------------------------------------------------------------------------------------------------
