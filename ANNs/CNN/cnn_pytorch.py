@@ -1,7 +1,5 @@
-import torch
-from torch.autograd import Variable
-import torch.nn as nn
 import sys
+import torch.nn as nn
 import torch.nn.functional as F
 
 
@@ -35,10 +33,10 @@ class CNNPytorch(nn.Module):
         super(CNNPytorch, self).__init__()
 
         # image-2d-size
-        image_2d_size = tuple(image_size[2:4])
+        image_2d_size = tuple(image_size[1:3])
 
         # set channel
-        input_img_channel_num = int(image_size[1])
+        input_img_channel_num = int(image_size[0])
         conv1_channel_num = 6
         conv2_channel_num = 16
 

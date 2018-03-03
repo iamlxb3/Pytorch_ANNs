@@ -72,7 +72,8 @@ for epoch in range(MAX_TRAINING_EPOCH):
 
         outputs = mlp1(inputs) # -> return pt.nn.functional.softmax(self.fc3(dout))
 
-        print ("inputs: ", inputs)
+        print ("inputs: ", inputs.view(-1, 28 * 28))
+        print ("outputs: ", outputs)
         sys.exit()
         # # see grads
         # for parameter in mlp1.parameters():
